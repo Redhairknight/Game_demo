@@ -1,0 +1,4 @@
+res://scripts/enemies/enemy_base.gd
+res://scripts/enemies/enemy_spawner.gd
+res://autoload/game_manager.gd
+res://scripts/systems/main_game.gd

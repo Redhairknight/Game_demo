@@ -1,0 +1,60 @@
+[gd_scene load_steps=5 format=3 uid="uid://cv7rn3hx8do5s"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 20.0
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_char"]
+size = Vector2(48, 48)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_taunt"]
+radius = 120.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_pickup"]
+radius = 80.0
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 2
+script = ExtResource("res://scripts/player/player_controller.gd")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_body")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = SubResource("PlaceholderTexture2D_char")
+
+[node name="WeaponPivot" type="Node2D" parent="."]
+
+[node name="PickupArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PickupArea"]
+shape = SubResource("CircleShape2D_pickup")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("CircleShape2D_body")
+
+[node name="InvincibleTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="TauntArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TauntArea"]
+shape = SubResource("CircleShape2D_taunt")
+disabled = true
+
+[node name="ClothingSystem" type="Node" parent="."]
+script = ExtResource("res://scripts/player/clothing_system.gd")
+
+[node name="TauntSystem" type="Node" parent="."]
+script = ExtResource("res://scripts/player/taunt_system.gd")
+
+[node name="ExpSystem" type="Node" parent="."]
+script = ExtResource("res://scripts/systems/exp_system.gd")

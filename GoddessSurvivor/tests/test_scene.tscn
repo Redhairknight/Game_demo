@@ -1,0 +1,26 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://tests/test_runner.gd" id="1"]
+[ext_resource type="Script" path="res://tests/test_clothing_system.gd" id="2"]
+[ext_resource type="Script" path="res://tests/test_exp_system.gd" id="3"]
+[ext_resource type="Script" path="res://tests/test_taunt_system.gd" id="4"]
+[ext_resource type="Script" path="res://tests/test_enemy_spawner.gd" id="5"]
+[ext_resource type="Script" path="res://tests/test_weapon_system.gd" id="6"]
+
+[node name="TestRunner" type="Node"]
+script = ExtResource("1")
+
+[node name="ClothingSystemTests" type="Node" parent="."]
+script = ExtResource("2")
+
+[node name="ExpSystemTests" type="Node" parent="."]
+script = ExtResource("3")
+
+[node name="TauntSystemTests" type="Node" parent="."]
+script = ExtResource("4")
+
+[node name="EnemySpawnerTests" type="Node" parent="."]
+script = ExtResource("5")
+
+[node name="WeaponSystemTests" type="Node" parent="."]
+script = ExtResource("6")
