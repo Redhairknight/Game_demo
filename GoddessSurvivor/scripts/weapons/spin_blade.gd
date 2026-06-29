@@ -17,6 +17,7 @@ extends WeaponBase
 var current_angle: float = 0.0
 var blade_areas: Array[Area2D] = []              # 刀片区域节点
 var hit_timers: Dictionary = {}                  # 记录对每个敌人的伤害冷却
+var is_awakened: bool = false                    # 是否处于觉醒形态
 
 
 func _ready() -> void:
@@ -134,6 +135,26 @@ func _deal_damage_to(enemy: Node2D) -> void:
 	enemy.take_damage(get_actual_damage())
 	hit_timers[enemy_id] = hit_cooldown
 
+	# 觉醒弹射：在 120px 内找最近其他敌人，造成 50% 伤害
+	if is_awakened:
+		_bounce_damage(enemy)
+
+
+## 觉醒弹射伤害（一次性，不循环）
+func _bounce_damage(source_enemy: Node2D) -> void:
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	var nearest: Node2D = null
+	var nearest_dist := INF
+	for e in enemies:
+		if e == source_enemy or not is_instance_valid(e):
+			continue
+		var d := source_enemy.global_position.distance_to(e.global_position)
+		if d < nearest_dist and d <= 120.0:
+			nearest_dist = d
+			nearest = e
+	if nearest and nearest.has_method("take_damage"):
+		nearest.take_damage(get_actual_damage() * 0.5)
+
 
 ## 清理伤害冷却计时器
 func _cleanup_hit_timers(delta: float) -> void:
@@ -165,3 +186,10 @@ func get_blade_count() -> int:
 ## 获取实际旋转半径
 func get_actual_radius() -> float:
 	return orbit_radius + (current_level - 1) * radius_per_level
+
+
+## 触发觉醒（由 SynergySystem 调用）
+func awaken() -> void:
+	is_awakened = true
+	orbit_radius *= 3.0
+	_update_blade_positions()
