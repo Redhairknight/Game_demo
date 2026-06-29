@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://bq1k8m4xvp2fn"]
+[gd_scene load_steps=14 format=3 uid="uid://bq1k8m4xvp2fn"]
 
 [ext_resource type="Script" path="res://scripts/systems/main_game.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="2_player_ctrl"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://scripts/systems/synergy_system.gd" id="10_synergy"]
 [ext_resource type="Script" path="res://scripts/systems/chest_spawner.gd" id="11_chest"]
 [ext_resource type="Script" path="res://scripts/ui/wardrobe_panel.gd" id="12_wardrobe"]
+[ext_resource type="Script" path="res://scripts/ui/boss_health_bar.gd" id="13_boss_bar"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 20.0
@@ -165,6 +166,9 @@ text = "击杀: 0"
 
 [node name="ChestSpawner" type="Node" parent="."]
 script = ExtResource("11_chest")
+
+[node name="BossHealthBar" type="CanvasLayer" parent="."]
+script = ExtResource("13_boss_bar")
 
 [node name="WardrobePanel" type="CanvasLayer" parent="."]
 script = ExtResource("12_wardrobe")
