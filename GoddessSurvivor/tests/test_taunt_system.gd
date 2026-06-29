@@ -25,11 +25,11 @@ var clothing_damage_on_max: float = 20.0  # 满蓄力消耗衣着1阶段（20%�
 var cooldown_time: float = 0.0
 var cooldown_duration: float = 1.0
 
-# 蓄力档位阈值
-const TIER_1_MIN: float = 0.5
-const TIER_2_MIN: float = 1.0
-const TIER_3_MIN: float = 2.0
-const MAX_CHARGE: float = 2.0
+# 蓄力档位阈值 — 与 taunt_system.gd 保持一致
+const TIER_1_MIN: float = 1.0
+const TIER_2_MIN: float = 2.0
+const TIER_3_MIN: float = 3.0
+const MAX_CHARGE: float = 3.0
 
 
 # ========== 辅助方法 ==========
@@ -149,55 +149,55 @@ func test_charge_time_cap() -> void:
 ## 测试蓄力不足为无效档
 func test_tier_none_insufficient_charge() -> void:
 	_start_charging()
-	_update_charge(0.3)  # 不足0.5秒
-	assert_eq(_get_current_tier(), TauntTier.NONE, "0.3秒应为无效档")
+	_update_charge(0.5)  # 不足1.0秒
+	assert_eq(_get_current_tier(), TauntTier.NONE, "0.5秒应为无效档")
 
 
-## 测试1档蓄力（0.5s - 1.0s）
+## 测试1档蓄力（1.0s - 2.0s）
 func test_tier_1_charge() -> void:
 	_start_charging()
-	_update_charge(0.5)
-	assert_eq(_get_current_tier(), TauntTier.TIER_1, "0.5秒应为1档")
-
-	_reset()
-	_start_charging()
-	_update_charge(0.8)
-	assert_eq(_get_current_tier(), TauntTier.TIER_1, "0.8秒应为1档")
-
-	_reset()
-	_start_charging()
-	_update_charge(0.99)
-	assert_eq(_get_current_tier(), TauntTier.TIER_1, "0.99秒应为1档")
-
-
-## 测试2档蓄力（1.0s - 2.0s）
-func test_tier_2_charge() -> void:
-	_start_charging()
 	_update_charge(1.0)
-	assert_eq(_get_current_tier(), TauntTier.TIER_2, "1.0秒应为2档")
+	assert_eq(_get_current_tier(), TauntTier.TIER_1, "1.0秒应为1档")
 
 	_reset()
 	_start_charging()
 	_update_charge(1.5)
-	assert_eq(_get_current_tier(), TauntTier.TIER_2, "1.5秒应为2档")
+	assert_eq(_get_current_tier(), TauntTier.TIER_1, "1.5秒应为1档")
 
 	_reset()
 	_start_charging()
 	_update_charge(1.99)
-	assert_eq(_get_current_tier(), TauntTier.TIER_2, "1.99秒应为2档")
+	assert_eq(_get_current_tier(), TauntTier.TIER_1, "1.99秒应为1档")
 
 
-## 测试3档满蓄力（2.0s+）
-func test_tier_3_full_charge() -> void:
+## 测试2档蓄力（2.0s - 3.0s）
+func test_tier_2_charge() -> void:
 	_start_charging()
 	_update_charge(2.0)
-	assert_eq(_get_current_tier(), TauntTier.TIER_3, "2.0秒应为3档（满蓄力）")
+	assert_eq(_get_current_tier(), TauntTier.TIER_2, "2.0秒应为2档")
+
+	_reset()
+	_start_charging()
+	_update_charge(2.5)
+	assert_eq(_get_current_tier(), TauntTier.TIER_2, "2.5秒应为2档")
+
+	_reset()
+	_start_charging()
+	_update_charge(2.99)
+	assert_eq(_get_current_tier(), TauntTier.TIER_2, "2.99秒应为2档")
+
+
+## 测试3档满蓄力（3.0s+）
+func test_tier_3_full_charge() -> void:
+	_start_charging()
+	_update_charge(3.0)
+	assert_eq(_get_current_tier(), TauntTier.TIER_3, "3.0秒应为3档（满蓄力）")
 
 
 ## 测试满蓄力消耗衣着1阶段
 func test_tier_3_clothing_cost() -> void:
 	_start_charging()
-	_update_charge(2.0)
+	_update_charge(3.0)
 	var result = _release()
 	assert_true(result["success"], "满蓄力释放应成功")
 	assert_eq(result["tier"], TauntTier.TIER_3, "应为3档")
@@ -207,7 +207,7 @@ func test_tier_3_clothing_cost() -> void:
 ## 测试非满蓄力不消耗衣着
 func test_lower_tiers_no_clothing_cost() -> void:
 	_start_charging()
-	_update_charge(0.7)  # 1档
+	_update_charge(1.5)  # 1档
 	var result = _release()
 	assert_true(result["success"], "1档释放应成功")
 	assert_eq(result["clothing_cost"], 0.0, "非满蓄力不应消耗衣着")
@@ -216,7 +216,7 @@ func test_lower_tiers_no_clothing_cost() -> void:
 ## 测试无效释放（蓄力不足）
 func test_release_insufficient_charge() -> void:
 	_start_charging()
-	_update_charge(0.2)  # 不足最低蓄力
+	_update_charge(0.5)  # 不足最低蓄力1.0s
 	var result = _release()
 	assert_false(result["success"], "蓄力不足释放应失败")
 	assert_eq(result["tier"], TauntTier.NONE, "应为无效档")
@@ -226,8 +226,8 @@ func test_release_insufficient_charge() -> void:
 ## 测试被打断蓄力清零
 func test_interrupt_resets_charge() -> void:
 	_start_charging()
-	_update_charge(1.5)  # 蓄力1.5秒
-	assert_near(charge_time, 1.5, 0.001, "应有1.5秒蓄力")
+	_update_charge(2.5)  # 蓄力2.5秒
+	assert_near(charge_time, 2.5, 0.001, "应有2.5秒蓄力")
 
 	_interrupt()  # 被打断
 	assert_eq(charge_time, 0.0, "被打断后蓄力应清零")

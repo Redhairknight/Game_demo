@@ -18,8 +18,8 @@ var current_durability: float = 100.0
 var current_stage: int = 0
 var is_ultimate_form: bool = false
 
-# 阶段阈值（百分比）
-const STAGE_THRESHOLDS: Array[float] = [81.0, 61.0, 41.0, 21.0, 1.0]
+# 阶段阈值（百分比）— 与 clothing_system.gd 保持一致
+const STAGE_THRESHOLDS: Array[float] = [80.0, 60.0, 40.0, 20.0, 0.0]
 
 
 # ========== 辅助方法 ==========
@@ -38,7 +38,7 @@ func _calculate_stage() -> int:
 	if percent <= 0.0:
 		return -1  # 极限形态
 	for i in range(STAGE_THRESHOLDS.size()):
-		if percent >= STAGE_THRESHOLDS[i]:
+		if percent > STAGE_THRESHOLDS[i]:
 			return i
 	return STAGE_THRESHOLDS.size()
 
@@ -79,7 +79,7 @@ func test_initial_state_full_durability() -> void:
 
 ## 测试阶段0边界（100% - 81%）
 func test_stage_0_boundary() -> void:
-	# 在81%时仍为阶段0
+	# 81% 时仍为阶段0（81 > 80 = true → stage 0）
 	_apply_damage(19.0)  # 100 -> 81
 	assert_eq(_get_durability_percent(), 81.0, "耐久应为81%")
 	assert_eq(current_stage, 0, "81%时应为阶段0")
@@ -87,12 +87,13 @@ func test_stage_0_boundary() -> void:
 
 ## 测试阶段0到阶段1的转变（80%）
 func test_stage_0_to_1_transition() -> void:
+	# 80% 时进入阶段1（80 > 80 = false，跳到下一个 80 > 60 = true → stage 1）
 	_apply_damage(20.0)  # 100 -> 80
 	assert_eq(_get_durability_percent(), 80.0, "耐久应为80%")
 	assert_eq(current_stage, 1, "80%时应为阶段1")
 
 
-## 测试阶段1边界（80% - 61%）
+## 测试阶段1边界（79% - 61%）
 func test_stage_1_boundary() -> void:
 	_apply_damage(39.0)  # 100 -> 61
 	assert_eq(_get_durability_percent(), 61.0, "耐久应为61%")
@@ -106,7 +107,7 @@ func test_stage_1_to_2_transition() -> void:
 	assert_eq(current_stage, 2, "60%时应为阶段2")
 
 
-## 测试阶段2边界（60% - 41%）
+## 测试阶段2边界（59% - 41%）
 func test_stage_2_boundary() -> void:
 	_apply_damage(59.0)  # 100 -> 41
 	assert_eq(_get_durability_percent(), 41.0, "耐久应为41%")
@@ -120,7 +121,7 @@ func test_stage_2_to_3_transition() -> void:
 	assert_eq(current_stage, 3, "40%时应为阶段3")
 
 
-## 测试阶段3边界（40% - 21%）
+## 测试阶段3边界（39% - 21%）
 func test_stage_3_boundary() -> void:
 	_apply_damage(79.0)  # 100 -> 21
 	assert_eq(_get_durability_percent(), 21.0, "耐久应为21%")
@@ -134,7 +135,7 @@ func test_stage_3_to_4_transition() -> void:
 	assert_eq(current_stage, 4, "20%时应为阶段4")
 
 
-## 测试阶段4边界（20% - 1%）
+## 测试阶段4边界（19% - 1%）
 func test_stage_4_boundary() -> void:
 	_apply_damage(99.0)  # 100 -> 1
 	assert_eq(_get_durability_percent(), 1.0, "耐久应为1%")
