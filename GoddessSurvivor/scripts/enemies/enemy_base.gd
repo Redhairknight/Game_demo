@@ -35,6 +35,7 @@ var knockback_velocity: Vector2 = Vector2.ZERO   # 击退速度
 var speed_multiplier: float = 1.0                # 速度修正（受减速影响）
 var is_taunted: bool = false                     # 是否被嘲讽
 var taunt_target: Vector2 = Vector2.ZERO         # 嘲讽目标位置
+var is_charmed: bool = false                     # 是否被魅惑
 
 
 func _ready() -> void:
@@ -71,7 +72,7 @@ func _physics_process(delta: float) -> void:
 
 # ===== 移动逻辑 =====
 
-## 朝玩家方向移动
+## 朝目标方向移动（嘲讽/魅惑/普通三种目标）
 func _move_towards_player(delta: float) -> void:
 	if not is_instance_valid(player_ref):
 		player_ref = GameManager.player_node
@@ -79,7 +80,14 @@ func _move_towards_player(delta: float) -> void:
 			return
 
 	var target_pos: Vector2
-	if is_taunted:
+	if is_charmed:
+		# 魅惑：朝最近其他敌人移动
+		var nearest_enemy := _find_nearest_other_enemy()
+		if nearest_enemy:
+			target_pos = nearest_enemy.global_position
+		else:
+			target_pos = player_ref.global_position
+	elif is_taunted:
 		target_pos = taunt_target
 	else:
 		target_pos = player_ref.global_position
@@ -87,6 +95,21 @@ func _move_towards_player(delta: float) -> void:
 	var direction := (target_pos - global_position).normalized()
 	var final_speed := move_speed * speed_multiplier
 	velocity = direction * final_speed + knockback_velocity
+
+
+## 查找最近的其他敌人（魅惑用）
+func _find_nearest_other_enemy() -> Node2D:
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	var nearest: Node2D = null
+	var nearest_dist := INF
+	for enemy in enemies:
+		if enemy == self or not is_instance_valid(enemy):
+			continue
+		var dist := global_position.distance_to(enemy.global_position)
+		if dist < nearest_dist:
+			nearest_dist = dist
+			nearest = enemy
+	return nearest
 
 
 ## 处理击退衰减
@@ -137,6 +160,13 @@ func apply_taunt(target_position: Vector2, speed_reduction: float) -> void:
 	is_taunted = true
 	taunt_target = target_position
 	speed_multiplier = 1.0 - speed_reduction
+
+
+## 应用魅惑（被命中后攻击最近其他敌人）
+func apply_charm(duration: float) -> void:
+	is_charmed = true
+	var timer := get_tree().create_timer(duration)
+	timer.timeout.connect(func() -> void: is_charmed = false)
 
 
 ## 减速结束
