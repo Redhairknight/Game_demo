@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bq1k8m4xvp2fn"]
+[gd_scene load_steps=11 format=3 uid="uid://bq1k8m4xvp2fn"]
 
 [ext_resource type="Script" path="res://scripts/systems/main_game.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="2_player_ctrl"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="7_hud"]
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="8_pause"]
 [ext_resource type="Script" path="res://scripts/ui/game_over.gd" id="9_gameover"]
+[ext_resource type="Script" path="res://scripts/systems/synergy_system.gd" id="10_synergy"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 20.0
@@ -73,6 +74,9 @@ script = ExtResource("4_taunt")
 
 [node name="ExpSystem" type="Node" parent="Player"]
 script = ExtResource("5_exp")
+
+[node name="SynergySystem" type="Node" parent="Player"]
+script = ExtResource("10_synergy")
 
 [node name="Camera2D" type="Camera2D" parent="Player"]
 zoom = Vector2(1.5, 1.5)
