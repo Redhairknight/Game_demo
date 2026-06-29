@@ -176,12 +176,10 @@ func _die() -> void:
 
 ## 掉落经验宝石
 func _drop_exp() -> void:
-	if drop_scene:
-		var gem := drop_scene.instantiate()
-		gem.global_position = global_position
-		if gem.has_method("set_exp_value"):
-			gem.set_exp_value(exp_value)
-		get_tree().current_scene.add_child(gem)
+	var gem := ExpGem.new()
+	gem.global_position = global_position
+	gem.set_exp_value(exp_value)
+	get_tree().current_scene.add_child(gem)
 
 
 ## 死亡动画

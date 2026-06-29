@@ -153,9 +153,12 @@ func _generate_weapon_option() -> Dictionary:
 	if not player:
 		return {"type": "weapon", "id": "bullet_ring", "name": "弹幕环", "description": "获得弹幕环武器", "is_new": true}
 
-	var weapons := player.get_children().filter(func(child: Node) -> bool:
-		return child is WeaponBase
-	)
+	var weapon_pivot := player.get_node_or_null("WeaponPivot")
+	var weapons := []
+	if weapon_pivot:
+		weapons = weapon_pivot.get_children().filter(func(child: Node) -> bool:
+			return child is WeaponBase
+		)
 
 	# 50%概率升级现有武器，50%获得新武器
 	if weapons.size() > 0 and randf() < 0.5:

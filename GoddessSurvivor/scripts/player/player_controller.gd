@@ -34,6 +34,8 @@ var is_invincible: bool = false
 var is_dead: bool = false
 var can_move: bool = true                # 是否可以移动（挑逗蓄力时为false）
 var speed_multiplier: float = 1.0        # 速度修正系数
+var damage_multiplier: float = 1.0       # 全局伤害倍率
+var cooldown_multiplier: float = 1.0     # 全局冷却倍率（<1 = 更快）
 var nearest_enemy: Node2D = null         # 最近的敌人引用
 var facing_direction: Vector2 = Vector2.RIGHT  # 面朝方向
 

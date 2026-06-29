@@ -76,23 +76,26 @@ func _start_cooldown() -> void:
 	current_cooldown = get_actual_cooldown()
 
 
-## 获取实际冷却时间（考虑等级减少）
+## 获取实际冷却时间（考虑等级减少和玩家全局冷却倍率）
 func get_actual_cooldown() -> float:
 	var cd := base_cooldown - (current_level - 1) * cooldown_reduction
+	if player_ref and "cooldown_multiplier" in player_ref:
+		cd *= player_ref.cooldown_multiplier
 	return maxf(cd, 0.2)  # 最低0.2秒
 
 
 # ===== 伤害计算 =====
 
-## 获取实际伤害（考虑等级和衣着加成）
+## 获取实际伤害（考虑等级、衣着加成和玩家全局伤害倍率）
 func get_actual_damage() -> float:
 	var dmg := base_damage + (current_level - 1) * damage_per_level
 
-	# 获取衣着系统的攻击加成
 	if player_ref:
 		var clothing := player_ref.get_node_or_null("ClothingSystem") as ClothingSystem
 		if clothing:
 			dmg *= clothing.get_attack_multiplier()
+		if "damage_multiplier" in player_ref:
+			dmg *= player_ref.damage_multiplier
 
 	return dmg
 

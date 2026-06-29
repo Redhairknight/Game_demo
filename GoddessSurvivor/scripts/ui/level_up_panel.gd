@@ -139,8 +139,27 @@ func _apply_weapon_option(option: Dictionary, player: Node) -> void:
 		return
 
 	if option.get("is_new", false):
-		# 新武器 - 需要添加武器节点（简化处理）
-		print("[LevelUpPanel] 新武器: %s (需要实例化场景)" % option.get("id", ""))
+		var weapon_id: String = option.get("id", "")
+		var weapon: WeaponBase = null
+		match weapon_id:
+			"bullet_ring":
+				weapon = BulletRing.new()
+				weapon.name = "BulletRing"
+			"spin_blade":
+				weapon = SpinBlade.new()
+				weapon.name = "SpinBlade"
+			"chain_lightning":
+				weapon = ChainLightning.new()
+				weapon.name = "ChainLightning"
+		if weapon:
+			var pivot := player.get_node_or_null("WeaponPivot")
+			if pivot:
+				# 如果已有同类武器就升级而不是重复添加
+				var existing := pivot.get_node_or_null(weapon.name)
+				if existing and existing is WeaponBase:
+					existing.level_up()
+				else:
+					pivot.add_child(weapon)
 	else:
 		# 升级现有武器
 		var target: WeaponBase = option.get("target_node", null)
@@ -169,14 +188,16 @@ func _apply_passive_option(option: Dictionary, player: Node) -> void:
 			if player is PlayerController:
 				player.pickup_range *= (1.0 + value)
 		"damage":
-			# 全局伤害加成（通过衣着系统或独立变量）
-			pass
+			if "damage_multiplier" in player:
+				player.damage_multiplier *= (1.0 + value)
 		"cooldown":
-			# 全局冷却缩减
-			pass
+			if "cooldown_multiplier" in player:
+				player.cooldown_multiplier = clampf(player.cooldown_multiplier + value, 0.3, 1.0)
 		"armor":
-			# 衣着耐久消耗减少
-			pass
+			var clothing := player.get_node_or_null("ClothingSystem") as ClothingSystem
+			if clothing:
+				clothing.max_durability *= (1.0 + value)
+				clothing.current_durability = clampf(clothing.current_durability, 0.0, clothing.max_durability)
 
 
 ## 应用解放选项
