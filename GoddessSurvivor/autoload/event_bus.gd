@@ -71,6 +71,9 @@ signal boss_defeated()
 ## 协同觉醒触发 (character_id: String, weapon_id: String)
 signal synergy_awakened(character_id: String, weapon_id: String)
 
+## 亲密度更新 (char_id, delta, new_total, new_unlocks)
+signal affinity_updated(char_id: String, delta: int, new_total: int, new_unlocks: Array)
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
