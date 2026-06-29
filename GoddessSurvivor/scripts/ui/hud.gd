@@ -175,11 +175,18 @@ func _update_taunt_bar() -> void:
 		taunt_bar.value = taunt_ref.get_charge_progress() * 100.0
 
 
-func _on_synergy_awakened(_character_id: String, _weapon_id: String) -> void:
+func _on_synergy_awakened(character_id: String, _weapon_id: String) -> void:
+	var banners := {
+		"rin": {"text": "✦ 心跳弹幕·星之告白 ✦",   "color": Color(1.0, 0.4, 0.7)},
+		"lin": {"text": "✦ 逆鳞之舞·裸剑觉醒 ✦",   "color": Color(0.7, 0.7, 1.0)},
+		"rei": {"text": "✦ 以太共振·雷霆解放 ✦",   "color": Color(0.6, 0.4, 1.0)},
+	}
+	var config: Dictionary = banners.get(character_id, banners["rin"])
+
 	var label := Label.new()
-	label.text = "✦ 心跳弹幕·星之告白 ✦"
+	label.text = config["text"]
 	label.add_theme_font_size_override("font_size", 36)
-	label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.7))
+	label.add_theme_color_override("font_color", config["color"])
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.set_anchors_preset(Control.PRESET_CENTER)
