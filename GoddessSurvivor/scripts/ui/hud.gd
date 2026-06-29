@@ -105,6 +105,9 @@ func _connect_signals() -> void:
 		taunt_ref.charge_released.connect(_on_taunt_released)
 		taunt_ref.charge_interrupted.connect(_on_taunt_interrupted)
 
+	# 协同觉醒提示
+	EventBus.synergy_awakened.connect(_on_synergy_awakened)
+
 
 # ===== 更新回调 =====
 
@@ -170,3 +173,24 @@ func _on_taunt_interrupted() -> void:
 func _update_taunt_bar() -> void:
 	if taunt_ref and taunt_ref.is_charging and taunt_bar:
 		taunt_bar.value = taunt_ref.get_charge_progress() * 100.0
+
+
+func _on_synergy_awakened(_character_id: String, _weapon_id: String) -> void:
+	var label := Label.new()
+	label.text = "✦ 心跳弹幕·星之告白 ✦"
+	label.add_theme_font_size_override("font_size", 36)
+	label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.7))
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.set_anchors_preset(Control.PRESET_CENTER)
+	label.position = Vector2(-400, -30)
+	label.size = Vector2(800, 60)
+	add_child(label)
+
+	label.scale = Vector2(0.5, 0.5)
+	var tween := label.create_tween()
+	tween.tween_property(label, "scale", Vector2(1.2, 1.2), 0.2)
+	tween.tween_property(label, "scale", Vector2(1.0, 1.0), 0.2)
+	tween.tween_interval(1.6)
+	tween.tween_property(label, "modulate:a", 0.0, 0.4)
+	tween.tween_callback(label.queue_free)
