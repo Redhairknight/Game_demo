@@ -22,7 +22,10 @@ func _ready() -> void:
 	_create_background()
 
 	# 开始游戏！
-	GameManager.start_game("rin")
+	if GameManager.current_character_id.is_empty():
+		GameManager.start_game("rin")
+	else:
+		GameManager.start_game(GameManager.current_character_id)
 
 	print("[MainGame] 游戏场景初始化完成")
 
@@ -40,11 +43,13 @@ func _process(_delta: float) -> void:
 func _setup_player_visual() -> void:
 	if not player:
 		return
-
+	var char_id := GameManager.current_character_id
+	if char_id.is_empty():
+		char_id = "rin"
 	var sprite := player.get_node_or_null("Sprite2D") as Sprite2D
 	if sprite:
-		sprite.texture = PixelSpriteGenerator.create_character_texture("rin")
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST  # 像素风锐利
+		sprite.texture = PixelSpriteGenerator.create_character_texture(char_id)
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 
 ## 添加初始武器
