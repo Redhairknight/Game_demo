@@ -91,6 +91,29 @@ static func create_bullet_texture(color: Color = Color(1.0, 0.9, 0.3)) -> ImageT
 	return texture
 
 
+## 生成心形弹幕纹理 (12x12) — 觉醒弹幕专用
+static func create_heart_bullet_texture() -> ImageTexture:
+	var img := Image.create(12, 12, false, Image.FORMAT_RGBA8)
+	var color := Color(1.0, 0.4, 0.6)  # 粉红色
+	var highlight := Color(1.0, 0.8, 0.9)
+
+	# 心形：两个上圆 + 下三角
+	_draw_circle(img, Vector2i(4, 4), 2, color)
+	_draw_circle(img, Vector2i(8, 4), 2, color)
+	# 下方三角填充
+	for y in range(4, 10):
+		var half_w := 5 - (y - 4)
+		if half_w <= 0:
+			break
+		for x in range(6 - half_w, 6 + half_w):
+			_draw_pixel(img, Vector2i(x, y), color)
+	# 高光
+	_draw_pixel(img, Vector2i(4, 3), highlight)
+	_draw_pixel(img, Vector2i(8, 3), highlight)
+
+	return ImageTexture.create_from_image(img)
+
+
 ## 生成经验宝石纹理 (12x12)
 static func create_exp_gem_texture() -> ImageTexture:
 	var img := Image.create(12, 12, false, Image.FORMAT_RGBA8)
