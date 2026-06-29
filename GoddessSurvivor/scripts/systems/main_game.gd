@@ -21,6 +21,9 @@ func _ready() -> void:
 	# 绘制地面背景
 	_create_background()
 
+	# 连接换装宝箱信号
+	_connect_wardrobe()
+
 	# 开始游戏！
 	if GameManager.current_character_id.is_empty():
 		GameManager.start_game("rin")
@@ -101,3 +104,43 @@ func _update_nearest_enemy() -> void:
 			nearest = enemy
 
 	player.update_nearest_enemy(nearest)
+
+
+## 连接换装宝箱系统
+func _connect_wardrobe() -> void:
+	var panel := get_node_or_null("WardrobePanel") as WardrobePanel
+	if not panel:
+		return
+
+	# 宝箱打开时弹出面板
+	get_tree().connect("node_added", func(node: Node) -> void:
+		if node is WardrobeChest:
+			node.chest_opened.connect(func(chest: WardrobeChest) -> void:
+				panel.show_panel(chest)
+			)
+	)
+
+	# 选择服装后应用效果
+	panel.outfit_selected.connect(_on_outfit_selected)
+
+
+## 处理换装选择
+func _on_outfit_selected(outfit_id: String, restore_only: bool) -> void:
+	if not player:
+		return
+	var clothing := player.get_node_or_null("ClothingSystem") as ClothingSystem
+	if not clothing:
+		return
+
+	if restore_only or outfit_id.is_empty():
+		# 不换装，恢复25%耐久
+		clothing.restore_durability(25.0)
+	else:
+		# 换装：重置耐久度到满
+		clothing.restore_durability(clothing.max_durability)
+		# 更新角色像素图（占位：用新 outfit_id 重新生成，待美术替换）
+		var sprite := player.get_node_or_null("Sprite2D") as Sprite2D
+		if sprite:
+			sprite.texture = PixelSpriteGenerator.create_character_texture(
+				GameManager.current_character_id
+			)
