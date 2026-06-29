@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://bq1k8m4xvp2fn"]
+[gd_scene load_steps=15 format=3 uid="uid://bq1k8m4xvp2fn"]
 
 [ext_resource type="Script" path="res://scripts/systems/main_game.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="2_player_ctrl"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/systems/chest_spawner.gd" id="11_chest"]
 [ext_resource type="Script" path="res://scripts/ui/wardrobe_panel.gd" id="12_wardrobe"]
 [ext_resource type="Script" path="res://scripts/ui/boss_health_bar.gd" id="13_boss_bar"]
+[ext_resource type="Script" path="res://scripts/systems/affinity_calculator.gd" id="14_affinity"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 20.0
@@ -88,6 +89,9 @@ position_smoothing_speed = 10.0
 
 [node name="EnemySpawner" type="Node2D" parent="."]
 script = ExtResource("6_spawner")
+
+[node name="AffinityCalculator" type="Node" parent="."]
+script = ExtResource("14_affinity")
 
 [node name="UI" type="CanvasLayer" parent="."]
 layer = 10
