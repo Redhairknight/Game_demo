@@ -19,6 +19,9 @@ extends WeaponBase
 @export var lightning_color: Color = Color(0.5, 0.8, 1.0)  # 闪电颜色
 @export var lightning_width: float = 3.0       # 闪电线条宽度
 
+# ===== 状态 =====
+var is_awakened: bool = false
+
 # ===== 初始化 =====
 func _ready() -> void:
 	super._ready()
@@ -149,3 +152,9 @@ func _generate_lightning_points(from: Vector2, to: Vector2) -> PackedVector2Arra
 
 	points.append(to)
 	return points
+
+
+## 触发觉醒（由 SynergySystem 调用）
+func awaken() -> void:
+	is_awakened = true
+	chain_count *= 2
