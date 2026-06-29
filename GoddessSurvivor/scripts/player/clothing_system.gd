@@ -150,8 +150,39 @@ func _apply_stage_effects(stage: ClothingStage) -> void:
 	if not player:
 		return
 
-	# 更新玩家速度修正
+	# 更新内置速度加成
 	player.speed_multiplier = speed_bonus[int(stage)]
+
+	# 读取角色专属暴露加成
+	var char_data := CharacterData.get_character_by_id(GameManager.current_character_id)
+	if not char_data:
+		return
+
+	var cumulative := char_data.get_cumulative_bonus(int(stage))
+
+	# 伤害倍率（累积 damage_bonus）
+	player.damage_multiplier = 1.0 + cumulative.get("damage_bonus", 0.0)
+
+	# 攻速 → 冷却倍率（cumulative attack_speed_bonus 换算：+15% 攻速 = 冷却 × 0.87）
+	var atk_spd: float = cumulative.get("attack_speed_bonus", 0.0)
+	player.cooldown_multiplier = 1.0 / (1.0 + atk_spd) if atk_spd > 0.0 else 1.0
+
+	# 速度：叠加角色专属移速加成到内置加成上
+	var extra_spd: float = cumulative.get("speed_bonus", 0.0)
+	player.speed_multiplier = speed_bonus[int(stage)] * (1.0 + extra_spd)
+
+	# 特殊效果列表
+	var specials: Array = cumulative.get("specials", [])
+	player.active_specials = specials
+
+	# exp_range_double：经验拾取范围翻倍
+	var has_exp_double := specials.has("exp_range_double")
+	var base_range := player.pickup_range
+	var pickup_area := player.get_node_or_null("PickupArea") as Area2D
+	if pickup_area:
+		var col := pickup_area.get_node_or_null("CollisionShape2D") as CollisionShape2D
+		if col and col.shape is CircleShape2D:
+			(col.shape as CircleShape2D).radius = base_range * (2.0 if has_exp_double else 1.0)
 
 
 ## 触发极限形态

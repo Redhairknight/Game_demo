@@ -17,6 +17,7 @@ extends WeaponBase
 # ===== 状态变量 =====
 var current_rotation: float = 0.0                 # 当前旋转角度
 var is_awakened: bool = false                      # 是否处于觉醒形态
+var _homing_bullets: Array[Area2D] = []           # 追踪弹幕列表
 
 
 func _ready() -> void:
@@ -30,15 +31,37 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	super._process(delta)
 
-	# 旋转动画
 	if GameManager.current_state == GameManager.GameState.PLAYING:
 		current_rotation += rotation_speed * delta
+		_update_homing_bullets(delta)
+
+
+## 每帧更新追踪弹幕朝向
+func _update_homing_bullets(delta: float) -> void:
+	var to_remove: Array[Area2D] = []
+	for bullet in _homing_bullets:
+		if not is_instance_valid(bullet):
+			to_remove.append(bullet)
+			continue
+		var enemies := get_tree().get_nodes_in_group("enemies")
+		var nearest: Node2D = null
+		var nd := INF
+		for e in enemies:
+			if is_instance_valid(e):
+				var d := bullet.global_position.distance_to(e.global_position)
+				if d < nd:
+					nd = d
+					nearest = e
+		if nearest:
+			var dir := (nearest.global_position - bullet.global_position).normalized()
+			bullet.global_position += dir * bullet_speed * delta
+	for b in to_remove:
+		_homing_bullets.erase(b)
 
 
 # ===== 重写攻击逻辑 =====
 
 func _try_attack() -> void:
-	# 弹幕环不需要特定目标，检查范围内是否有敌人
 	var enemies := _find_enemies_in_range(fire_range)
 	if enemies.size() > 0 and is_ready:
 		_execute_attack(null)
@@ -60,14 +83,12 @@ func _fire_ring() -> void:
 		var spawn_offset := Vector2(cos(angle), sin(angle)) * ring_radius
 		var spawn_pos := global_position + spawn_offset
 		var direction := Vector2(cos(angle), sin(angle))
-
 		_spawn_bullet(spawn_pos, direction)
 
 
 ## 生成单个弹幕
 func _spawn_bullet(pos: Vector2, direction: Vector2) -> void:
 	if not bullet_scene:
-		# 如果没有弹幕场景，创建简易弹幕
 		_spawn_simple_bullet(pos, direction)
 		return
 
@@ -84,33 +105,41 @@ func _spawn_simple_bullet(pos: Vector2, direction: Vector2) -> void:
 	bullet.global_position = pos
 	bullet.add_to_group("player_projectiles")
 
-	# 添加碰撞形状
 	var collision := CollisionShape2D.new()
 	var shape := CircleShape2D.new()
 	shape.radius = 5.0
 	collision.shape = shape
 	bullet.add_child(collision)
 
-	# 添加可视化
 	var visual := Sprite2D.new()
 	if is_awakened:
 		visual.texture = PixelSpriteGenerator.create_heart_bullet_texture()
 		visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	bullet.add_child(visual)
 
-	# 设置碰撞层
-	bullet.collision_layer = 8  # Layer 4: Weapons
-	bullet.collision_mask = 2   # Layer 2: Enemies
+	bullet.collision_layer = 8
+	bullet.collision_mask = 2
 
 	get_tree().current_scene.add_child(bullet)
 
-	# 移动弹幕
-	var tween := bullet.create_tween()
-	var end_pos := pos + direction * bullet_speed * bullet_lifetime
-	tween.tween_property(bullet, "global_position", end_pos, bullet_lifetime)
-	tween.tween_callback(bullet.queue_free)
+	# 判断是否追踪（阶段2特效 homing_bullets）
+	var is_homing := player_ref != null and "active_specials" in player_ref \
+		and (player_ref as PlayerController).active_specials.has("homing_bullets")
 
-	# 碰撞检测
+	if is_homing:
+		_homing_bullets.append(bullet)
+		var timer := get_tree().create_timer(bullet_lifetime)
+		timer.timeout.connect(func() -> void:
+			_homing_bullets.erase(bullet)
+			if is_instance_valid(bullet):
+				bullet.queue_free()
+		)
+	else:
+		var tween := bullet.create_tween()
+		var end_pos := pos + direction * bullet_speed * bullet_lifetime
+		tween.tween_property(bullet, "global_position", end_pos, bullet_lifetime)
+		tween.tween_callback(bullet.queue_free)
+
 	var awakened := is_awakened
 	bullet.area_entered.connect(func(area: Area2D) -> void:
 		if area.is_in_group("enemy_hurtbox"):
@@ -119,6 +148,7 @@ func _spawn_simple_bullet(pos: Vector2, direction: Vector2) -> void:
 				enemy.take_damage(get_actual_damage())
 				if awakened and enemy.has_method("apply_charm") and randf() < 0.3:
 					enemy.apply_charm(3.0)
+			_homing_bullets.erase(bullet)
 			bullet.queue_free()
 	)
 	bullet.body_entered.connect(func(body: Node2D) -> void:
@@ -126,6 +156,7 @@ func _spawn_simple_bullet(pos: Vector2, direction: Vector2) -> void:
 			body.take_damage(get_actual_damage())
 			if awakened and body.has_method("apply_charm") and randf() < 0.3:
 				body.apply_charm(3.0)
+			_homing_bullets.erase(bullet)
 			bullet.queue_free()
 	)
 
