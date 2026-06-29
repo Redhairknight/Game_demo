@@ -1,16 +1,25 @@
-## 协同觉醒系统 — 监测武器等级+衣着阶段，条件满足时触发一次性觉醒
+## 协同觉醒系统 — 数据驱动，支持三角色
 ## 挂在 Player 节点下，依赖 ClothingSystem 和 WeaponPivot
 class_name SynergySystem
 extends Node
 
+# 三角色觉醒配置
+const SYNERGY_CONFIG := {
+	"rin": {"weapon_name": "BulletRing",     "effect": "rin_heartbeat"},
+	"lin": {"weapon_name": "SpinBlade",      "effect": "lin_reverse_scale"},
+	"rei": {"weapon_name": "ChainLightning", "effect": "rei_resonance"},
+}
+
 var already_awakened: bool = false
 var _exp_magnet_timer: float = 0.0
+var _rei_aura_timer: float = 0.0
 const EXP_MAGNET_INTERVAL: float = 0.5
+const REI_AURA_INTERVAL: float = 1.0
 
-# 节点引用（_ready 时获取）
 var _player: PlayerController = null
 var _clothing: ClothingSystem = null
 var _flash_overlay: ColorRect = null
+var _active_effect: String = ""
 
 
 func _ready() -> void:
@@ -25,48 +34,60 @@ func _process(delta: float) -> void:
 	if GameManager.current_state != GameManager.GameState.PLAYING:
 		return
 
-	# 条件检查（一次性）
 	if not already_awakened:
 		_check_awakening()
 
-	# 觉醒后：经验磁场循环
 	if already_awakened:
-		_exp_magnet_timer += delta
-		if _exp_magnet_timer >= EXP_MAGNET_INTERVAL:
-			_exp_magnet_timer = 0.0
-			_attract_all_gems()
+		_update_effects(delta)
+
+
+func _update_effects(delta: float) -> void:
+	match _active_effect:
+		"rin_heartbeat":
+			_exp_magnet_timer += delta
+			if _exp_magnet_timer >= EXP_MAGNET_INTERVAL:
+				_exp_magnet_timer = 0.0
+				_attract_all_gems()
+		"rei_resonance":
+			_rei_aura_timer += delta
+			if _rei_aura_timer >= REI_AURA_INTERVAL:
+				_rei_aura_timer = 0.0
+				_apply_rei_defense_aura()
 
 
 func _check_awakening() -> void:
-	if GameManager.current_character_id != "rin":
+	var char_id := GameManager.current_character_id
+	if not SYNERGY_CONFIG.has(char_id):
 		return
 	if not _clothing:
 		return
 	if _clothing.get_current_stage() < 3:
 		return
 
+	var cfg: Dictionary = SYNERGY_CONFIG[char_id]
 	var pivot := _player.get_node_or_null("WeaponPivot")
 	if not pivot:
 		return
-	var bullet_ring := pivot.get_node_or_null("BulletRing") as BulletRing
-	if not bullet_ring:
+	var weapon := pivot.get_node_or_null(cfg["weapon_name"])
+	if not weapon:
 		return
-	if bullet_ring.current_level < 5:
+	if not weapon.has_method("awaken"):
+		return
+	if not "current_level" in weapon or weapon.current_level < 5:
 		return
 
-	# 所有条件满足，触发觉醒
-	_trigger_awakening(bullet_ring)
+	_trigger_awakening(weapon, char_id, cfg)
 
 
-func _trigger_awakening(bullet_ring: BulletRing) -> void:
+func _trigger_awakening(weapon: Node, char_id: String, cfg: Dictionary) -> void:
 	already_awakened = true
-	bullet_ring.awaken()
-	EventBus.synergy_awakened.emit("rin", "bullet_ring")
+	_active_effect = cfg["effect"]
+	weapon.awaken()
+	EventBus.synergy_awakened.emit(char_id, cfg["weapon_name"].to_lower())
 	_play_flash_effect()
 
 
 func _play_flash_effect() -> void:
-	# 全屏白色闪烁覆盖层
 	var canvas := CanvasLayer.new()
 	canvas.layer = 50
 	get_tree().current_scene.add_child(canvas)
@@ -90,3 +111,10 @@ func _attract_all_gems() -> void:
 	for gem in gems:
 		if is_instance_valid(gem) and gem.has_method("attract_to"):
 			gem.attract_to(player_pos, 200.0)
+
+
+func _apply_rei_defense_aura() -> void:
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if is_instance_valid(enemy) and enemy.has_method("apply_defense_reduction"):
+			enemy.apply_defense_reduction(0.3, 1.5)
