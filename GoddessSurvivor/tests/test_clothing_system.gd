@@ -48,7 +48,7 @@ func _apply_damage(amount: float) -> void:
 	var new_stage = _calculate_stage()
 	if new_stage == -1:
 		is_ultimate_form = true
-		current_stage = 5
+		current_stage = 4  # ClothingStage.EXTREME = 4
 	else:
 		current_stage = new_stage
 		is_ultimate_form = false
@@ -147,7 +147,7 @@ func test_ultimate_form_trigger() -> void:
 	_apply_damage(100.0)  # 100 -> 0
 	assert_eq(_get_durability_percent(), 0.0, "耐久应为0%")
 	assert_true(is_ultimate_form, "0%时应触发极限形态")
-	assert_eq(current_stage, 5, "极限形态阶段应为5")
+	assert_eq(current_stage, 4, "极限形态阶段应为4（ClothingStage.EXTREME=4）")
 
 
 ## 测试过度伤害不会使耐久度为负
