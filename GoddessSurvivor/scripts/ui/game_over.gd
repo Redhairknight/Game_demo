@@ -2,6 +2,8 @@
 class_name GameOver
 extends CanvasLayer
 
+var _affinity_panel_parent: VBoxContainer = null
+
 
 func _ready() -> void:
 	layer = 30
@@ -9,6 +11,7 @@ func _ready() -> void:
 	visible = false
 	GameManager.state_changed.connect(_on_state_changed)
 	EventBus.game_over.connect(_on_game_over)
+	EventBus.affinity_updated.connect(_on_affinity_updated)
 
 
 func _on_game_over(kill_count: int, elapsed_time: float) -> void:
@@ -33,13 +36,14 @@ func _build_ui(kill_count: int, elapsed_time: float) -> void:
 
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.position = Vector2(-200, -180)
-	panel.size = Vector2(400, 360)
+	panel.position = Vector2(-240, -220)
+	panel.size = Vector2(480, 460)
 	add_child(panel)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 16)
 	panel.add_child(vbox)
+	_affinity_panel_parent = vbox
 
 	var title := Label.new()
 	title.text = "游戏结束"
@@ -76,3 +80,45 @@ func _build_ui(kill_count: int, elapsed_time: float) -> void:
 	quit_btn.add_theme_font_size_override("font_size", 22)
 	quit_btn.pressed.connect(func() -> void: get_tree().quit())
 	vbox.add_child(quit_btn)
+
+
+func _on_affinity_updated(char_id: String, delta: int, new_total: int, new_unlocks: Array) -> void:
+	if not _affinity_panel_parent:
+		return
+	_show_affinity_result(_affinity_panel_parent, char_id, delta, new_total, new_unlocks)
+
+
+func _show_affinity_result(vbox: VBoxContainer, char_id: String, delta: int, new_total: int, new_unlocks: Array) -> void:
+	var sep := HSeparator.new()
+	vbox.add_child(sep)
+
+	var char_names := {"rin": "铃 (Rin)", "lin": "凛 (Lin)", "rei": "零 (Rei)"}
+	var char_name: String = char_names.get(char_id, char_id)
+
+	var affinity_lbl := Label.new()
+	affinity_lbl.text = "亲密度  %s   +%d ★" % [char_name, delta]
+	affinity_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	affinity_lbl.add_theme_font_size_override("font_size", 20)
+	affinity_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	vbox.add_child(affinity_lbl)
+
+	var next_threshold := AffinityManager.get_next_unlock_threshold(char_id)
+	var progress_text: String
+	if next_threshold == -1:
+		progress_text = "当前: %d（已全部解锁！）" % new_total
+	else:
+		progress_text = "当前: %d / 下一解锁: %d" % [new_total, next_threshold]
+
+	var progress_lbl := Label.new()
+	progress_lbl.text = progress_text
+	progress_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	progress_lbl.add_theme_font_size_override("font_size", 16)
+	vbox.add_child(progress_lbl)
+
+	for unlock in new_unlocks:
+		var unlock_lbl := Label.new()
+		unlock_lbl.text = "🔓 " + unlock.get("desc", "")
+		unlock_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		unlock_lbl.add_theme_font_size_override("font_size", 16)
+		unlock_lbl.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
+		vbox.add_child(unlock_lbl)
