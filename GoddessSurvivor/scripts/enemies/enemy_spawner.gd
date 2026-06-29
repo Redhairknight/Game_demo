@@ -19,11 +19,14 @@ var wave_number: int = 0
 var wave_timer: float = 0.0
 var player_ref: CharacterBody2D = null
 var has_spawned_initial: bool = false
+var has_spawned_boss: bool = false
+var is_boss_alive: bool = false
 
 
 func _ready() -> void:
 	enemy_scene = load("res://scenes/enemies/enemy_base.tscn") as PackedScene
 	EventBus.enemy_killed.connect(func(_d: Dictionary) -> void: current_enemy_count -= 1)
+	EventBus.boss_defeated.connect(func() -> void: is_boss_alive = false)
 
 
 func _process(delta: float) -> void:
@@ -40,6 +43,16 @@ func _process(delta: float) -> void:
 		has_spawned_initial = true
 		for i in range(8):
 			_spawn_one()
+		return
+
+	# Boss 触发检查（11 分钟 = 660 秒）
+	if not has_spawned_boss and GameManager.elapsed_time >= 660.0:
+		has_spawned_boss = true
+		is_boss_alive = true
+		_spawn_boss()
+
+	# Boss 存活期间暂停普通生成
+	if is_boss_alive:
 		return
 
 	# 定时生成
@@ -82,3 +95,13 @@ func _spawn_one() -> void:
 
 	get_tree().current_scene.add_child(enemy)
 	current_enemy_count += 1
+
+
+func _spawn_boss() -> void:
+	if not is_instance_valid(player_ref):
+		return
+	var boss := BossEnemy.new()
+	boss.global_position = player_ref.global_position + Vector2(400.0, 0.0)
+	get_tree().current_scene.add_child(boss)
+	EventBus.boss_spawned.emit(boss)
+	print("[EnemySpawner] Boss 已生成! 位置: %s" % boss.global_position)
