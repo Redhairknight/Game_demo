@@ -65,6 +65,9 @@ signal wave_started(wave_number: int)
 ## Boss出现
 signal boss_spawned(boss_node: Node)
 
+## Boss被击败
+signal boss_defeated()
+
 ## 协同觉醒触发 (character_id: String, weapon_id: String)
 signal synergy_awakened(character_id: String, weapon_id: String)
 
