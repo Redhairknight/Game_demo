@@ -91,6 +91,32 @@ static func create_bullet_texture(color: Color = Color(1.0, 0.9, 0.3)) -> ImageT
 	return texture
 
 
+## 生成 Boss 占位纹理 (48x48，scale×3 显示为 96×96)
+static func create_boss_texture() -> ImageTexture:
+	var img := Image.create(48, 48, false, Image.FORMAT_RGBA8)
+	var body_color := Color(0.7, 0.1, 0.1)
+	var accent_color := Color(1.0, 0.3, 0.0)
+	var eye_color := Color(1.0, 0.9, 0.0)
+
+	# 身体（大圆）
+	_draw_circle(img, Vector2i(24, 26), 18, body_color)
+	# 头部
+	_draw_circle(img, Vector2i(24, 14), 12, body_color.lightened(0.1))
+	# 头冠装饰（三角）
+	_draw_triangle(img, Vector2i(12, 6), Vector2i(24, 0), Vector2i(20, 8), accent_color)
+	_draw_triangle(img, Vector2i(36, 6), Vector2i(24, 0), Vector2i(28, 8), accent_color)
+	# 眼睛（发光）
+	_draw_circle(img, Vector2i(19, 13), 3, eye_color)
+	_draw_circle(img, Vector2i(29, 13), 3, eye_color)
+	_draw_pixel(img, Vector2i(19, 13), Color.WHITE)
+	_draw_pixel(img, Vector2i(29, 13), Color.WHITE)
+	# 腿/爪
+	_draw_rect(img, Vector2i(14, 40), Vector2i(6, 7), body_color.darkened(0.2))
+	_draw_rect(img, Vector2i(28, 40), Vector2i(6, 7), body_color.darkened(0.2))
+
+	return ImageTexture.create_from_image(img)
+
+
 ## 生成心形弹幕纹理 (12x12) — 觉醒弹幕专用
 static func create_heart_bullet_texture() -> ImageTexture:
 	var img := Image.create(12, 12, false, Image.FORMAT_RGBA8)
