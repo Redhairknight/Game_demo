@@ -34,3 +34,17 @@ func collect(_collector: Node) -> void:
 	_collected = true
 	EventBus.exp_collected.emit(exp_value)
 	queue_free()
+
+
+## 被经验磁场吸引，飞向目标后自动收集
+func attract_to(target_pos: Vector2, speed: float = 200.0) -> void:
+	if _collected:
+		return
+	var dist := global_position.distance_to(target_pos)
+	if dist < 1.0:
+		collect(null)
+		return
+	var duration := dist / speed
+	var tween := create_tween()
+	tween.tween_property(self, "global_position", target_pos, duration)
+	tween.tween_callback(func() -> void: collect(null))
