@@ -16,6 +16,7 @@ extends WeaponBase
 
 # ===== 状态变量 =====
 var current_rotation: float = 0.0                 # 当前旋转角度
+var is_awakened: bool = false                      # 是否处于觉醒形态
 
 
 func _ready() -> void:
@@ -90,8 +91,11 @@ func _spawn_simple_bullet(pos: Vector2, direction: Vector2) -> void:
 	collision.shape = shape
 	bullet.add_child(collision)
 
-	# 添加可视化（简单的圆）
+	# 添加可视化
 	var visual := Sprite2D.new()
+	if is_awakened:
+		visual.texture = PixelSpriteGenerator.create_heart_bullet_texture()
+		visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	bullet.add_child(visual)
 
 	# 设置碰撞层
@@ -107,16 +111,21 @@ func _spawn_simple_bullet(pos: Vector2, direction: Vector2) -> void:
 	tween.tween_callback(bullet.queue_free)
 
 	# 碰撞检测
+	var awakened := is_awakened
 	bullet.area_entered.connect(func(area: Area2D) -> void:
 		if area.is_in_group("enemy_hurtbox"):
 			var enemy := area.get_parent()
 			if enemy and enemy.has_method("take_damage"):
 				enemy.take_damage(get_actual_damage())
+				if awakened and enemy.has_method("apply_charm") and randf() < 0.3:
+					enemy.apply_charm(3.0)
 			bullet.queue_free()
 	)
 	bullet.body_entered.connect(func(body: Node2D) -> void:
 		if body.is_in_group("enemies") and body.has_method("take_damage"):
 			body.take_damage(get_actual_damage())
+			if awakened and body.has_method("apply_charm") and randf() < 0.3:
+				body.apply_charm(3.0)
 			bullet.queue_free()
 	)
 
@@ -124,3 +133,8 @@ func _spawn_simple_bullet(pos: Vector2, direction: Vector2) -> void:
 ## 获取当前弹幕数量
 func get_bullet_count() -> int:
 	return base_bullet_count + (current_level - 1) * bullets_per_level
+
+
+## 触发觉醒形态（由 SynergySystem 调用，只触发一次）
+func awaken() -> void:
+	is_awakened = true
