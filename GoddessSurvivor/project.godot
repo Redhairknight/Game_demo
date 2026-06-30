@@ -21,6 +21,7 @@ config/icon="res://icon.svg"
 GameManager="*res://autoload/game_manager.gd"
 EventBus="*res://autoload/event_bus.gd"
 AffinityManager="*res://autoload/affinity_manager.gd"
+AudioManager="*res://autoload/audio_manager.gd"
 
 [display]
 
@@ -73,3 +74,8 @@ pause={
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+
+[audio]
+
+buses/default_bus_count=4
+buses/default_bus_layout="res://audio/audio_bus_layout.tres"
